@@ -1,47 +1,59 @@
 package com.example.truckpadteste.activity
 
 import android.os.Bundle
-import android.view.View
+import android.widget.Button
+import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import com.example.truckpadteste.R
 import com.example.truckpadteste.model.RouteResult
 import com.example.truckpadteste.util.showToastMessage
+import com.example.truckpadteste.util.toggleVisibility
 import com.example.truckpadteste.viewmodel.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var mainProgressBar : ProgressBar
+    private lateinit var tryAgainButton : Button
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        initViews()
         val mainViewModel: MainViewModel by viewModel()
 
         with(mainViewModel) {
 
             startApiCall()
-            alternateProgressBarVisibility()
+            toggleProgressBarVisibility()
 
             observableRouteResultLiveData.observe(this@MainActivity, Observer {
                 setRouteInfoTexts(it)
-                alternateProgressBarVisibility()
+                toggleProgressBarVisibility()
             })
 
             observableErrorLiveData.observe(this@MainActivity, Observer {
                 showToastMessage(it)
-                alternateProgressBarVisibility()
+                toggleProgressBarVisibility()
+                toggleTryAgainButtonVisibility()
             })
+        }
+
+        tryAgainButton.setOnClickListener {
+            mainViewModel.startApiCall()
+            toggleProgressBarVisibility()
+            toggleTryAgainButtonVisibility()
         }
     }
 
-    private fun alternateProgressBarVisibility() {
-        if (mainProgressBar.isVisible)
-            mainProgressBar.visibility = View.GONE
-        else
-            mainProgressBar.visibility = View.VISIBLE
+    private fun toggleTryAgainButtonVisibility() {
+        tryAgainButton.toggleVisibility()
+    }
+
+    private fun toggleProgressBarVisibility() {
+        mainProgressBar.toggleVisibility()
     }
 
     private fun setRouteInfoTexts(routeResult: RouteResult) {
@@ -54,5 +66,10 @@ class MainActivity : AppCompatActivity() {
             neogranelTv.text = neogranel.toString()
             hazardousTv.text = hazardous.toString()
         }
+    }
+
+    private fun initViews() {
+        mainProgressBar = findViewById(R.id.mainProgressBar)
+        tryAgainButton = findViewById(R.id.tryAgainButton)
     }
 }
